@@ -1,0 +1,65 @@
+library(shiny)
+library(shinythemes)
+library(RSQLite)
+
+navbarPage(theme = shinytheme("yeti"),
+          "Appeals",
+           tabPanel("Query Data",
+                    sidebarLayout(
+                      sidebarPanel(
+                          tabsetPanel(
+                              tabPanel("Date", 
+                                        uiOutput(outputId = 'dateRange')),
+                              tabPanel("Display", 
+                                       uiOutput(outputId = 'display')), 
+                              tabPanel("Filter", 
+                                       selectInput("inp", "Input", c("Nonprecedential")))
+                          )
+                          
+                          
+                        ),
+                      mainPanel(
+                            DT::dataTableOutput('mytable1')
+                      )
+           )
+           ), 
+           tabPanel("Insert Data", 
+                    mainPanel(wellPanel(
+                      fluidRow(
+                         column(6,
+                        uiOutput('ID'),
+                        textInput('caseDate', "Enter Case Date:",""), 
+                        textInput('origin', "Enter Origin:",""), 
+                        textInput('caseName', "Enter Case Name:",""), 
+                        textInput('type', "Enter Type:",""), 
+                        textInput('appealNumber', "Enter Appeal Number:",""), 
+                        textInput('docType', "Enter Document Type:",""), 
+                        textInput('enBanc', "Enter EnBanc:",""), 
+                        textInput('judge1', "Enter Judge 1:",""), 
+                        textInput('judge2', "Enter Judge 2:",""), 
+                        textInput('judge3', "Enter Judge 3:",""), 
+                        textInput('opinion1', "Enter Opinion 1:","")
+                        ),
+                        column(6,
+                               textInput('opinion1Author', "Enter Opinion 1 Author:",""),
+                               textInput('opinion2', "Enter Opinion 2:", ""),
+                               textInput('opinion2Author', "Enter Opinion 2 Author:",""),
+                               textInput('opinion3', "Enter Opinion 3:", ""),
+                               textInput('opinion3Author', "Enter Opinion 3 Author:",""),
+                               textInput('opinion4', "Enter Opinion 4:", ""),
+                               textInput('opinion4Author', "Enter Opinion 4 Author:",""),
+                               textInput('civilDis1', "Enter Civility Dissent 1:", ""),
+                               textInput('civDis2', "Enter Civility Dissent 2:", ""),
+                               textInput('notes', "Enter Notes:", ""),
+                               textInput('url', "Enter URL:",""),
+                               actionButton("insert","Insert")
+                         )
+                      )
+                    )
+                      
+                    ),
+                    textOutput("text")
+           )
+                    
+)
+
