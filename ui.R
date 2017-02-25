@@ -8,20 +8,22 @@ navbarPage(theme = shinytheme("yeti"),
                     sidebarLayout(
                       sidebarPanel(
                           tabsetPanel(
-                              tabPanel("Date", 
-                                        uiOutput(outputId = 'dateRange')),
-                              tabPanel("Display", 
-                                       uiOutput(outputId = 'display')), 
                               tabPanel("Filter", 
-                                       selectInput("inp", "Input", c("Nonprecedential")))
+                                       uiOutput(outputId = 'dateRange'),
+                                       uiOutput(outputId = 'originFilter'),
+                                       uiOutput(outputId = 'typeFilter'),
+                                       uiOutput(outputId = 'docTypeFilter'),
+                                       uiOutput(outputId = 'enBancFilter'),
+                                       uiOutput(outputId = 'opinion1Filter')
+                              ),
+                              tabPanel("Display", 
+                                       uiOutput(outputId = 'display'))
                           )
-                          
-                          
                         ),
                       mainPanel(
                             DT::dataTableOutput('mytable1')
                       )
-           )
+                )
            ), 
            tabPanel("Insert Data", 
                     mainPanel(wellPanel(
