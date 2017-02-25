@@ -16,10 +16,47 @@ minCaseDate <- dbGetQuery(con, "SELECT min(caseDate) FROM appeals")[,1];
 
 function(input, output) {
     
+    #Each 'uniqueXXXXX' reactive value is created so anytime new data is added, it will
+        #update the items in a filter, adding new ones if neccessary
+    uniqueOrigin <- reactive({
+        input$insert
+        dbGetQuery(con, "SELECT DISTINCT(origin) FROM appeals")[,1]
+    })
+    
+    uniqueType <- reactive({
+        input$insert
+        dbGetQuery(con, "SELECT DISTINCT(type) FROM appeals")[,1]
+    })
+    
+    uniqueDocType <- reactive({
+        input$insert
+        dbGetQuery(con, "SELECT DISTINCT(docType) FROM appeals")[,1]
+    })
+    
+    uniqueEnBanc <- reactive({
+        input$insert
+        dbGetQuery(con, "SELECT DISTINCT(enBanc) FROM appeals")[,1]
+    })
+    
+    uniqueOpinion1 <- reactive({
+        input$insert
+        dbGetQuery(con, "SELECT DISTINCT(opinion1) FROM appeals")[,1]
+    })
+    
     nextID <- reactive({ 
         input$insert
         dbGetQuery(con, "SELECT max(uniqueID) FROM appeals")[,1] + 1;
     })
+    
+    output$originFilter <- renderUI(selectInput('originInput', 'Origin:', choices = uniqueOrigin(), multiple = TRUE))
+    
+    output$typeFilter <- renderUI(selectInput("typeInput", 'Type:', choices = uniqueType(), multiple = TRUE))
+    
+    output$docTypeFilter <- renderUI(selectInput('docTypeInput', 'Document Type:', choices = uniqueDocType(), multiple = TRUE))
+    
+    output$enBancFilter <- renderUI(selectInput('enBancInput', 'enBanc:', choices = uniqueEnBanc(), multiple = TRUE))
+    
+    output$opinion1Filter <- renderUI(selectInput('opinion1Input', 'Opinion 1:', choices = uniqueOpinion1(), multiple = TRUE))
     
     output$ID <- renderUI(numericInput('uniqueID', "Enter ID:", nextID()))
     
@@ -42,7 +79,23 @@ function(input, output) {
     
     #Rendering the data table for the current data frame, and current labels
     output$mytable1 <- DT::renderDataTable({
-        DT::datatable(current_frame()[, input$show_vars, drop = FALSE], colnames = names(appealsFields)[current_labels()]);
+        tempData <- current_frame();
+        if(!is.null(input$originInput)) {
+            tempData <- subset(tempData, tempData$origin %in% input$originInput);
+        }
+        if(!is.null(input$typeInput)) {
+            tempData <- subset(tempData, tempData$type %in% input$typeInput);
+        }
+        if(!is.null(input$docTypeInput)) {
+            tempData <- subset(tempData, tempData$docType %in% input$docTypeInput);
+        }
+        if(!is.null(input$enBancInput)) {
+            tempData <- subset(tempData, tempData$enBanc %in% input$enBancInput);
+        }
+        if(!is.null(input$opinion1Input)) {
+            tempData <- subset(tempData, tempData$opinion1 %in% input$opinion1Input);
+        }
+        DT::datatable(tempData[, input$show_vars, drop = FALSE], colnames = names(appealsFields)[current_labels()]);
     })
     
     output$text <- renderText({
