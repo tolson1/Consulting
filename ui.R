@@ -3,44 +3,47 @@ library(shinythemes)
 library(RSQLite)
 
 navbarPage(theme = shinytheme("yeti"),
-          "Appeals",
+           "Federal Circuit Decisions Database ",
            tabPanel("Query Data",
                     sidebarLayout(
                       sidebarPanel(
-                          tabsetPanel(
-                              tabPanel("Filter", 
-                                       uiOutput(outputId = 'dateRange'),
-                                       uiOutput(outputId = 'originFilter'),
-                                       uiOutput(outputId = 'typeFilter'),
-                                       uiOutput(outputId = 'docTypeFilter'),
-                                       uiOutput(outputId = 'enBancFilter'),
-                                       uiOutput(outputId = 'opinion1Filter')
-                              ),
-                              tabPanel("Display", 
-                                       uiOutput(outputId = 'display'))
-                          )
-                        ),
+                        tabsetPanel(
+                          tabPanel("Filter", 
+                                   br(),
+                                   uiOutput(outputId = 'dateRange'),
+                                   uiOutput(outputId = 'originFilter'),
+                                   uiOutput(outputId = 'typeFilter'),
+                                   uiOutput(outputId = 'docTypeFilter'),
+                                   uiOutput(outputId = 'enBancFilter'),
+                                   uiOutput(outputId = 'opinion1Filter')
+                          ),
+                          tabPanel("Display",
+                                   br(),
+                                   uiOutput(outputId = 'display'))
+                        )
+                      ),
                       mainPanel(
-                            DT::dataTableOutput('mytable1')
+                        DT::dataTableOutput('mytable1'), 
+                        downloadButton('download', 'Download')
                       )
-                )
+                    )
            ), 
            tabPanel("Insert Data", 
                     mainPanel(wellPanel(
                       fluidRow(
-                         column(6,
-                        uiOutput('ID'),
-                        textInput('caseDate', "Enter Case Date:",""), 
-                        textInput('origin', "Enter Origin:",""), 
-                        textInput('caseName', "Enter Case Name:",""), 
-                        textInput('type', "Enter Type:",""), 
-                        textInput('appealNumber', "Enter Appeal Number:",""), 
-                        textInput('docType', "Enter Document Type:",""), 
-                        textInput('enBanc', "Enter EnBanc:",""), 
-                        textInput('judge1', "Enter Judge 1:",""), 
-                        textInput('judge2', "Enter Judge 2:",""), 
-                        textInput('judge3', "Enter Judge 3:",""), 
-                        textInput('opinion1', "Enter Opinion 1:","")
+                        column(6,
+                               textInput('caseDate', "Enter Case Date:",""), 
+                               textInput('origin', "Enter Origin:",""), 
+                               textInput('caseName', "Enter Case Name:",""), 
+                               textInput('type', "Enter Type:",""), 
+                               textInput('appealNumber', "Enter Appeal Number:",""), 
+                               textInput('docType', "Enter Document Type:",""), 
+                               textInput('enBanc', "Enter EnBanc:",""), 
+                               textInput('judge1', "Enter Judge 1:",""), 
+                               textInput('judge2', "Enter Judge 2:",""), 
+                               textInput('judge3', "Enter Judge 3:",""), 
+                               textInput('opinion1', "Enter Opinion 1:","")
+                               
                         ),
                         column(6,
                                textInput('opinion1Author', "Enter Opinion 1 Author:",""),
@@ -53,15 +56,18 @@ navbarPage(theme = shinytheme("yeti"),
                                textInput('civilDis1', "Enter Civility Dissent 1:", ""),
                                textInput('civDis2', "Enter Civility Dissent 2:", ""),
                                textInput('notes', "Enter Notes:", ""),
-                               textInput('url', "Enter URL:",""),
-                               actionButton("insert","Insert")
-                         )
+                               textInput('url', "Enter URL:","")
+                               
+                        )
                       )
                     )
-                      
-                    ),
-                    textOutput("text")
-           )
                     
+                    ),
+                    textOutput('ID'),
+                    br(),
+                    textOutput("text"),
+                    br(),
+                    actionButton("insert","Insert")
+           )
+           
 )
-
