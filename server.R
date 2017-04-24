@@ -1,6 +1,8 @@
 library(shiny)
 library(RSQLite)
 library(shinythemes)
+library(ggplot2)
+library(reshape2)
 
 #Connecting to the database
 con <- dbConnect(SQLite(), dbname = "appealsNEW.sqlite")
@@ -56,6 +58,13 @@ function(input, output, session) {
         dbGetQuery(con, "SELECT max(uniqueID) FROM appeals")[,1] + 1;
     })
     
+    uniqueVariables <- reactive({
+        uniqueVariables <- names(current_frame())
+        ignore <- c("uniqueID", "caseDate", "caseName", "appealNumber", "notes", "url")
+        ind <- which(uniqueVariables %in% ignore)
+        uniqueVariables[-ind]
+    })
+    
     output$originFilter <- renderUI(selectInput('originInput', 'Origin:', choices = uniqueOrigin(), multiple = TRUE))
     
     output$typeFilter <- renderUI(selectInput("typeInput", 'Type:', choices = uniqueType(), multiple = TRUE))
@@ -76,6 +85,10 @@ function(input, output, session) {
     
     #Rendering dateRangeInput to allow the user to query the database for any range
     output$dateRange <- renderUI(dateRangeInput(inputId = "dateRange", label = "Select Date Range: yyyy-mm-dd", start = minCaseDate));
+    
+    output$var1Filter <- renderUI(selectInput('var1Input', 'Variable 1:', choices = uniqueVariables(), multiple = FALSE))
+    
+    output$var2Filter <- renderUI(selectInput('var2Input', 'Variable 2:', choices = uniqueVariables(), multiple = FALSE))
     
     #Reactive value holding the current date frame depending on the chosen date range
     current_frame <- reactive({
@@ -247,7 +260,24 @@ function(input, output, session) {
     }
     )
     
+    selectedData <- reactive({
+        if(input$var1Input == "" && input$var2Input == "") {
+            x <- NA
+            y <- NA
+            z <- NA
+            data.frame(x, y, z)
+        }
+        else {
+            current_frame()[,c(input$var1Input, input$var2Input)]
+        }
+    })
     
+    output$plot1 <- renderPlot({
+        data <- melt(table(selectedData()))
+        ggplot(data, aes(x = data[,1], y = data[,3], fill = data[,2])) + 
+            geom_bar(stat = 'identity') + xlab(names(data)[1]) + ylab("Count") + 
+            scale_fill_discrete(name = names(data)[2])
+    })
     
     output$download <- downloadHandler(
         filename = "data.csv", 
