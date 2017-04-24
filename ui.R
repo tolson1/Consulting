@@ -113,5 +113,16 @@ navbarPage(theme = shinytheme("yeti"),
                       )
                     )
                     
+           ), 
+           tabPanel("Visualize Data",
+                    sidebarLayout(
+                      sidebarPanel("Select Variables:",
+                        br(),
+                        uiOutput(outputId = 'var1Filter'),
+                        uiOutput(outputId = 'var2Filter')),
+                      mainPanel(
+                        plotOutput('plot1')
+                      )
+                    )
            )
 )
