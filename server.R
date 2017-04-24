@@ -117,13 +117,34 @@ function(input, output, session) {
     })
     
     observeEvent(input$insert, {
-        query <- paste("INSERT INTO appeals VALUES (", nextID(),",'",input$caseDate,"','",format(as.Date(input$caseDate), "%Y"),"','",input$origin,"','",input$caseName,"','",input$type,"','",input$duplicate,"','",input$appealNumber,"','",input$docType,"','",input$enBanc,"','",input$judge1,"','",input$judge2,"','",input$judge3,"','",input$opinion1,"','",input$opinion1Author,"','",input$opinion2,"','",input$opinion2Author,"','",input$opinion3,"','",input$opinion3Author,"','",input$notes,"','",input$url,"')", sep="")
+        query <- paste("INSERT INTO appeals VALUES (", 
+                       nextID(),",'",
+                       input$caseDate,"','",
+                       format(as.Date(input$caseDate), "%Y"),"','",
+                       input$origin,"','",
+                       input$caseName,"','",
+                       input$type,"','",
+                       input$duplicate,"','",
+                       input$appealNumber,"','",
+                       input$docType,"','",
+                       input$enBanc,"','",
+                       input$judge1,"','",
+                       input$judge2,"','",
+                       input$judge3,"','",
+                       input$opinion1,"','",
+                       input$opinion1Author,"','",
+                       input$opinion2,"','",
+                       input$opinion2Author,"','",
+                       input$opinion3,"','",
+                       input$opinion3Author,"','",
+                       input$notes,"','",
+                       input$url,"')", sep="")
         cat(query)
         #The line below sends insert statement to database to insert the record
         #dbGetQuery(con, query) <--commented out for now
         
         #After the insert, the text fields are cleared
-        updateTextInput(session, inputId = "caseDate", value = "")
+        updateTextInput(session, inputId = "caseDate", value = Sys.Date())
         updateTextInput(session, inputId = "origin", value = "")
         updateTextInput(session, inputId = "caseName", value = "")
         updateTextInput(session, inputId = "type", value = "")
@@ -143,6 +164,90 @@ function(input, output, session) {
         updateTextInput(session, inputId = "notes", value = "")
         updateTextInput(session, inputId = "url", value = "")
     })
+    
+    observeEvent(input$getRecord, {
+        record <- dbGetQuery(con, paste0("SELECT * FROM appeals WHERE uniqueID = ", input$updateID))
+        if(length(record$uniqueID) == 0){
+            output$IDNotFound <- renderText({isolate(paste0("ID ",input$updateID, " not found."))})
+        } else {
+            output$IDNotFound <- renderText({""})
+            output$caseDateUpdate <- renderUI(textInput('caseDateUpdate', "Case Date", record$caseDate))
+            output$originUpdate <- renderUI(textInput('originUpdate', "Origin", record$origin))
+            output$yearUpdate <- renderUI(textInput('yearUpdate', "Year", record$year))
+            output$caseNameUpdate <- renderUI(textInput('caseNameUpdate', "Case Name", record$caseName))
+            output$typeUpdate <- renderUI(textInput('typeUpdate', "Type", record$type))
+            output$appealNumberUpdate <- renderUI(textInput('appealNumberUpdate', "Appeal Number", record$appealNumber))
+            output$docTypeUpdate <- renderUI(textInput('docTypeUpdate', "Document Type", record$docType))
+            output$enBancUpdate <- renderUI(textInput('enBancUpdate', "En Banc", record$enBanc))
+            output$judge1Update <- renderUI(textInput('judge1Update', "Judge 1", record$judge1))
+            output$judge2Update <- renderUI(textInput('judge2Update', "Judge 2", record$judge2))
+            output$judge3Update <- renderUI(textInput('judge3Update', "Judge 3", record$judge3))
+            output$opinion1Update <- renderUI(textInput('opinion1Update', "Opinion 1", record$opinion1))
+            output$opinion1AuthorUpdate <- renderUI(textInput('opinion1AuthorUpdate', "Opinion 1 Author", record$opinion1Author))
+            output$opinion2Update <- renderUI(textInput('opinion2Update', "Opinion 2", record$opinion2))
+            output$opinion2AuthorUpdate <- renderUI(textInput('opinion2AuthorUpdate', "Opinion 2 Author", record$opinion2Author))
+            output$opinion3Update <- renderUI(textInput('opinion3Update', "Opinion 3", record$opinion3))
+            output$opinion3AuthorUpdate <- renderUI(textInput('opinion3AuthorUpdate', "Opinion 3 Author", record$opinion3Author))
+            output$notesUpdate <- renderUI(textInput('notesUpdate', "Notes", record$notes))
+            output$urlUpdate <- renderUI(textInput('urlUpdate', "URL", record$url))
+            output$duplicateUpdate <- renderUI(textInput('duplicateUpdate', "Duplicate", record$duplicate))
+            output$updateButton <- renderUI(actionButton('updateButton', "Update"))
+            
+        }
+    }
+    )
+    
+    observeEvent(input$updateButton, {
+        query <- paste0("UPDATE appeals SET caseDate = '", input$caseDateUpdate,
+                        "', year = '", format(as.Date(input$caseDateUpdate), "%Y"),
+                        "', origin = '", input$originUpdate,
+                        "', caseName = '", input$caseNameUpdate,
+                        "', type = '", input$typeUpdate,
+                        "', duplicate = '", input$duplicateUpdate,
+                        "', appealNumber = '", input$appealNumberUpdate,
+                        "', docType = '", input$docTypeUpdate,
+                        "', enBanc = '", input$enBancUpdate,
+                        "', judge1 = '", input$judge1Update,
+                        "', judge2 = '", input$judge2Update,
+                        "', judge3 = '", input$judge3Update,
+                        "', opinion1 = '", input$opinion1Update,
+                        "', opinion1Author = '", input$opinion1AuthorUpdate,
+                        "', opinion2 = '", input$opinion2Update,
+                        "', opinion2Author = '", input$opinion2AuthorUpdate,
+                        "', opinion3 = '", input$opinion3Update,
+                        "', opinion3Author = '", input$opinion3AuthorUpdate,
+                        "', notes = '", input$notesUpdate,
+                        "', url = '", input$urlUpdate,
+                        "' WHERE uniqueID = ", input$updateID)
+        
+        #dbGetQuery(con, query) <---run this to update               
+        cat(query)
+        
+        #
+        updateTextInput(session, inputId = "caseDateUpdate", value = "")
+        updateTextInput(session, inputId = "originUpdate", value = "")
+        updateTextInput(session, inputId = "yearUpdate", value = "")
+        updateTextInput(session, inputId = "caseNameUpdate", value = "")
+        updateTextInput(session, inputId = "typeUpdate", value = "")
+        updateTextInput(session, inputId = "appealNumberUpdate", value = "")
+        updateTextInput(session, inputId = "docTypeUpdate", value = "")
+        updateTextInput(session, inputId = "enBancUpdate", value = "")
+        updateTextInput(session, inputId = "judge1Update", value = "")
+        updateTextInput(session, inputId = "judge2Update", value = "")
+        updateTextInput(session, inputId = "judge3Update", value = "")
+        updateTextInput(session, inputId = "opinion1Update", value = "")
+        updateTextInput(session, inputId = "opinion1AuthorUpdate", value = "")
+        updateTextInput(session, inputId = "opinion2Update", value = "")
+        updateTextInput(session, inputId = "opinion2AuthorUpdate", value = "")
+        updateTextInput(session, inputId = "opinion3Update", value = "")
+        updateTextInput(session, inputId = "opinion3AuthorUpdate", value = "")
+        updateTextInput(session, inputId = "duplicateUpdate", value = "")
+        updateTextInput(session, inputId = "notesUpdate", value = "")
+        updateTextInput(session, inputId = "urlUpdate", value = "")
+    }
+    )
+    
+    
     
     output$download <- downloadHandler(
         filename = "data.csv", 

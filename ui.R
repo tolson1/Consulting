@@ -33,7 +33,7 @@ navbarPage(theme = shinytheme("yeti"),
                     mainPanel(wellPanel(
                       fluidRow(
                         column(6,
-                               textInput('caseDate', "Enter Case Date:",""), 
+                               textInput('caseDate', "Enter Case Date:",Sys.Date()), 
                                textInput('origin', "Enter Origin:",""), 
                                textInput('caseName', "Enter Case Name:",""), 
                                textInput('type', "Enter Type:",""), 
@@ -76,34 +76,37 @@ navbarPage(theme = shinytheme("yeti"),
                           ),
                           column(6,
                                  br(),
-                                 actionButton("getRecord", "Get Record")
+                                 actionButton("getRecord", "Get Record"),
+                                 textOutput('IDNotFound')
                           )
                         )
                       ),
                       wellPanel(
                         fluidRow(
                           column(6,
-                                 textInput('caseDateUpdate', "Case Date:",""), 
-                                 textInput('originUpdate', "Origin:",""), 
-                                 textInput('yearUpdate', "Year:"),
-                                 textInput('caseNameUpdate', "Case Name:",""), 
-                                 textInput('typeUpdate', "Type:",""), 
-                                 textInput('appealNumberUpdate', "Appeal Number:",""), 
-                                 textInput('docTypeUpdate', "Document Type:",""), 
-                                 textInput('enBancUpdate', "EnBanc:",""), 
-                                 textInput('judge1Update', "Judge 1:",""), 
-                                 textInput('judge2Update', "Judge 2:","")
+                                 uiOutput('caseDateUpdate'), 
+                                 uiOutput('originUpdate'), 
+                                 uiOutput('yearUpdate'),
+                                 uiOutput('caseNameUpdate'), 
+                                 uiOutput('typeUpdate'), 
+                                 uiOutput('appealNumberUpdate'), 
+                                 uiOutput('docTypeUpdate'), 
+                                 uiOutput('enBancUpdate'), 
+                                 uiOutput('judge1Update'), 
+                                 uiOutput('judge2Update')
                           ),
                           column(6,
-                                 textInput('judge3Update', "Judge 3:",""),
-                                 textInput('opinion1Update', "Opinion 1:",""),
-                                 textInput('opinion1AuthorUpdate', "Opinion 1 Author:",""),
-                                 textInput('opinion2Update', "Opinion 2:", ""),
-                                 textInput('opinion2AuthorUpdate', "Opinion 2 Author:",""),
-                                 textInput('opinion3Update', "Opinion 3:", ""),
-                                 textInput('opinion3AuthorUpdate', "Opinion 3 Author:",""),
-                                 textInput('notesUpdate', "Notes:", ""),
-                                 textInput('urlUpdate', "URL:","")
+                                 uiOutput('judge3Update'),
+                                 uiOutput('opinion1Update'),
+                                 uiOutput('opinion1AuthorUpdate'),
+                                 uiOutput('opinion2Update'),
+                                 uiOutput('opinion2AuthorUpdate'),
+                                 uiOutput('opinion3Update'),
+                                 uiOutput('opinion3AuthorUpdate'),
+                                 uiOutput('notesUpdate'),
+                                 uiOutput('urlUpdate'),
+                                 uiOutput('duplicateUpdate'),
+                                 uiOutput('updateButton')
                           )
                         )
                         
