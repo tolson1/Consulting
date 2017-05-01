@@ -4,12 +4,16 @@ library(shinythemes)
 
 navbarPage(theme = shinytheme("yeti"),
            "Federal Circuit Decisions Database ",
+           
+           #Creating tab for querying the data
            tabPanel("Query Data",
                     sidebarLayout(
                       sidebarPanel(
                         tabsetPanel(
+                          #Subtab for filtering the data
                           tabPanel("Filter", 
                                    br(),
+                                   #Generic uiOutputs that depend on the databases current state, so they are rendered in server.R
                                    uiOutput(outputId = 'dateRange'),
                                    uiOutput(outputId = 'originFilter'),
                                    uiOutput(outputId = 'typeFilter'),
@@ -18,22 +22,28 @@ navbarPage(theme = shinytheme("yeti"),
                                    uiOutput(outputId = 'opinion1Filter'),
                                    uiOutput(outputId = 'yearFilter')
                           ),
+                          #Subtab for choosing columns to display
                           tabPanel("Display",
                                    br(),
+                                   #Generic uiOutput that is rendered in server.R
                                    uiOutput(outputId = 'display'))
                         )
                       ),
+                      #Data table which displays the data and download button
                       mainPanel(
                         DT::dataTableOutput('mytable1'), 
                         downloadButton('download', 'Download')
                       )
                     )
            ), 
+           #Tab for inserting new records
            tabPanel("Insert Data", 
                     mainPanel(wellPanel(
                       fluidRow(
                         column(6,
-                               textInput('caseDate', "Enter Case Date:",Sys.Date()), 
+                               #Creating textinputs for all columns in the database
+                               #Autopopulate the case date to today
+                               textInput('caseDate', "Enter Case Date:", Sys.Date()), 
                                textInput('origin', "Enter Origin:",""), 
                                textInput('caseName', "Enter Case Name:",""), 
                                textInput('type', "Enter Type:",""), 
@@ -42,11 +52,10 @@ navbarPage(theme = shinytheme("yeti"),
                                textInput('enBanc', "Enter EnBanc:",""), 
                                textInput('judge1', "Enter Judge 1:",""), 
                                textInput('judge2', "Enter Judge 2:",""), 
-                               textInput('judge3', "Enter Judge 3:","")
-                               
-                               
+                               textInput('judge3', "Enter Judge 3:","")   
                         ),
                         column(6,
+                               #Continue placing text boxes on insert page
                                textInput('opinion1', "Enter Opinion 1:",""),
                                textInput('opinion1Author', "Enter Opinion 1 Author:",""),
                                textInput('opinion2', "Enter Opinion 2:", ""),
@@ -61,22 +70,34 @@ navbarPage(theme = shinytheme("yeti"),
                     )
                     
                     ),
+                    
+                    #Text output which is used to display the uniqueID that was inserted by the application for a new record
                     textOutput('ID'),
                     br(),
+                    
+                    #Used to display the session insertion count
                     textOutput("text"),
                     br(),
+                    
+                    #Button to insert new record
                     actionButton("insert","Insert")
            ),
+           
+           #Creating tab to update an existing record
            tabPanel("Update Record",
                     mainPanel(
                       wellPanel(
                         fluidRow(
                           column(6,
+                                 #Text box to enter desired record ID to update
                                  textInput('updateID', "Enter ID:", "")
                           ),
                           column(6,
                                  br(),
+                                 #Button to retreieve the record for the supplied ID
                                  actionButton("getRecord", "Get Record"),
+                                 
+                                 #Text output to be displayed for invalid supplied ID's
                                  textOutput('IDNotFound')
                           )
                         )
@@ -84,6 +105,8 @@ navbarPage(theme = shinytheme("yeti"),
                       wellPanel(
                         fluidRow(
                           column(6,
+                                 #Creating generic uiOutputs to hold the record after being retrieved for update
+                                 #These depend on the current state of the database, so it is rendered in server.R
                                  uiOutput('caseDateUpdate'), 
                                  uiOutput('originUpdate'), 
                                  uiOutput('yearUpdate'),
@@ -114,13 +137,17 @@ navbarPage(theme = shinytheme("yeti"),
                     )
                     
            ), 
+           #Visualize tab to display stacked bar plots of variables
            tabPanel("Visualize Data",
                     sidebarLayout(
+                      #Title over the select inputs
                       sidebarPanel("Select Variables:",
                         br(),
+                        #Generic uiOutputs that will hold the variable names to be visualized
                         uiOutput(outputId = 'var1Filter'),
                         uiOutput(outputId = 'var2Filter')),
                       mainPanel(
+                        #Plot to be displayed
                         plotOutput('plot1')
                       )
                     )
