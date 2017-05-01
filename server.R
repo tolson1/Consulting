@@ -53,11 +53,13 @@ function(input, output, session) {
         dbGetQuery(con, "SELECT DISTINCT(opinion1) FROM appeals")[,1]
     })
     
+    #Each time a record is inserted, the next unique ID in line is ready to go
     nextID <- reactive({ 
         input$insert
         dbGetQuery(con, "SELECT max(uniqueID) FROM appeals")[,1] + 1;
     })
     
+    #Excluding variables that don't make sense to be visualized
     uniqueVariables <- reactive({
         uniqueVariables <- names(current_frame())
         ignore <- c("uniqueID", "caseDate", "caseName", "appealNumber", "notes", "url")
@@ -65,6 +67,7 @@ function(input, output, session) {
         uniqueVariables[-ind]
     })
     
+    #Creating filters of factors that allow multiple levels to be selected
     output$originFilter <- renderUI(selectInput('originInput', 'Origin:', choices = uniqueOrigin(), multiple = TRUE))
     
     output$typeFilter <- renderUI(selectInput("typeInput", 'Type:', choices = uniqueType(), multiple = TRUE))
@@ -85,32 +88,48 @@ function(input, output, session) {
     #Rendering dateRangeInput to allow the user to query the database for any range
     output$dateRange <- renderUI(dateRangeInput(inputId = "dateRange", label = "Select Date Range: yyyy-mm-dd", start = minCaseDate));
     
+    #Rendering variable selection filters on the 'Visualize' tab
     output$var1Filter <- renderUI(selectInput('var1Input', 'Variable 1:', choices = uniqueVariables(), multiple = FALSE))
     
     output$var2Filter <- renderUI(selectInput('var2Input', 'Variable 2:', choices = uniqueVariables(), multiple = FALSE))
     
-    #Reactive value holding the current date frame depending on the chosen date range
+    #Reactive value holding the current date frame depending on the chosen date range, or any other filter
     current_frame <- reactive({
+        #The data frame is initially selected between the chosen date range
         query <- paste("SELECT * FROM appeals WHERE caseDate BETWEEN '", input$dateRange[1],"' AND '",input$dateRange[2],"'", sep = "");
         tempData <- dbGetQuery(con, query);
+        
+        #Subsetting by the desired orgin levels on the 'Filter' tab
         if(!is.null(input$originInput)) {
             tempData <- subset(tempData, tempData$origin %in% input$originInput);
         }
+        
+        #Subsetting by the desired type levels on the 'Filter' tab
         if(!is.null(input$typeInput)) {
             tempData <- subset(tempData, tempData$type %in% input$typeInput);
         }
+        
+        #Subsetting by the desired document type levels on the 'Filter' tab
         if(!is.null(input$docTypeInput)) {
             tempData <- subset(tempData, tempData$docType %in% input$docTypeInput);
         }
+        
+        ##Subsetting by the desired enBanc levels on the 'Filter' tab
         if(!is.null(input$enBancInput)) {
             tempData <- subset(tempData, tempData$enBanc %in% input$enBancInput);
         }
+        
+        #Subsetting by the desired opinion 1 levels on the 'Filter' tab
         if(!is.null(input$opinion1Input)) {
             tempData <- subset(tempData, tempData$opinion1 %in% input$opinion1Input);
         }
+        
+        #Subsetting by the desired years on the 'Filter' tab
         if(!is.null(input$yearInput)) {
             tempData <- subset(tempData, tempData$year %in% input$yearInput);
         }
+        
+        #The resulting data frame then cotains the desired subset, containing only the columns selected in the 'Display' tab
         tempData[, input$show_vars, drop = FALSE]
     })
     
@@ -124,11 +143,14 @@ function(input, output, session) {
         DT::datatable(current_frame(), colnames = names(appealsFields)[current_labels()], rownames = FALSE);
     })
     
+    #Counts the number of inserts in a given session made by the user (Insert tab)
     output$text <- renderText({
         paste("Session Insertion Count:", input$insert);
     })
     
+    #When the insert button in clicked, the SQL statement is generated and sent to the database
     observeEvent(input$insert, {
+        #Grabbing each value supplied by the user from the text boxes in the 'Insert' tab
         query <- paste("INSERT INTO appeals VALUES (", 
                        nextID(),",'",
                        input$caseDate,"','",
@@ -178,12 +200,21 @@ function(input, output, session) {
         output$ID <- renderText({paste("Record Inserted:", nextID())})
     })
     
+    #Pulls the existing record from the database after the user supplies a unique ID and clicks 'Get Record' (Update page)
     observeEvent(input$getRecord, {
+        
+        #Selects the entire record from the database whose unique ID matches the one supplied
         record <- dbGetQuery(con, paste0("SELECT * FROM appeals WHERE uniqueID = ", input$updateID))
+        
+        #If the user supplies an invalid ID, an message is printed
         if(length(record$uniqueID) == 0){
             output$IDNotFound <- renderText({isolate(paste0("ID ",input$updateID, " not found."))})
         } else {
+            
+            #Gets rid of the invalid ID message
             output$IDNotFound <- renderText({""})
+            
+            #If a valid ID has been supplied, text boxes for each record are displayed with the current record populating the field
             output$caseDateUpdate <- renderUI(textInput('caseDateUpdate', "Case Date", record$caseDate))
             output$originUpdate <- renderUI(textInput('originUpdate', "Origin", record$origin))
             output$yearUpdate <- renderUI(textInput('yearUpdate', "Year", record$year))
@@ -210,7 +241,9 @@ function(input, output, session) {
     }
     )
     
+    #After the record has been pulled from the data, the user edits any field, and then presses 'Update Record'
     observeEvent(input$updateButton, {
+        #Once the button is pushed, a SQL statement is again generated which pushes the edited fields back to the database
         query <- paste0("UPDATE appeals SET caseDate = '", input$caseDateUpdate,
                         "', year = '", format(as.Date(input$caseDateUpdate), "%Y"),
                         "', origin = '", input$originUpdate,
@@ -233,10 +266,10 @@ function(input, output, session) {
                         "', url = '", input$urlUpdate,
                         "' WHERE uniqueID = ", input$updateID)
         
+        #Sends the 'Update' statement once the string has been generated
         dbGetQuery(con, query)              
        
-        
-        
+        #After updating a record, each field is cleared, 
         updateTextInput(session, inputId = "caseDateUpdate", value = "")
         updateTextInput(session, inputId = "originUpdate", value = "")
         updateTextInput(session, inputId = "yearUpdate", value = "")
@@ -261,29 +294,41 @@ function(input, output, session) {
     }
     )
     
+    #This reactive data frame is for plotting in the 'Visualize' tab
     selectedData <- reactive({
+        #Validating that the two desired variables have been selected before trying to plot. This avoids warning messages
+            #being displayed in the R console
         validate(
             need(input$var1Input, ''),
             need(input$var2Input, '')
         )
+        #If none are selected, return an empty plot
         if(input$var1Input == "" && input$var2Input == "") {
             x <- NA
             y <- NA
             z <- NA
             data.frame(x, y, z)
         }
+        #Otherwise the available plotting frame is returned
         else {
             current_frame()[,c(input$var1Input, input$var2Input)]
         }
     })
     
+    #Plotting the available data determined as 'selectedData'
     output$plot1 <- renderPlot({
+        #Rearranging the data to be suitable for ggplot2 plots
         data <- melt(table(selectedData()))
+        
+        #Displays a bar plot for the selected data, where variable 1 has a bar for each level
+            #and each of those are filled with the levels of variable 2.
+            #Counts are then displayed
         ggplot(data, aes(x = data[,1], y = data[,3], fill = factor(data[,2]))) + 
             geom_bar(stat = 'identity') + xlab(names(data)[1]) + ylab("Count") + 
             scale_fill_discrete(name = names(data)[2])
     })
     
+    #After customizing a data set in the 'Query' tab, the Download button will save the desired data frame as csv
     output$download <- downloadHandler(
         filename = "data.csv", 
         content = function(file) {
