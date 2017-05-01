@@ -77,7 +77,6 @@ function(input, output, session) {
     
     output$yearFilter <- renderUI(selectInput('yearInput', 'Year:', choices = uniqueYear(), multiple = TRUE))
     
-    output$ID <- renderText({paste("New Record ID:", nextID())})
     
     #Rendering checkboxGroupInput to allow user to display any columns
     output$display <- renderUI(checkboxGroupInput('show_vars', 'Display Columns:', choices = appealsFields,
@@ -152,9 +151,9 @@ function(input, output, session) {
                        input$opinion3Author,"','",
                        input$notes,"','",
                        input$url,"')", sep="")
-        cat(query)
+        
         #The line below sends insert statement to database to insert the record
-        #dbGetQuery(con, query) <--commented out for now
+        dbGetQuery(con, query)
         
         #After the insert, the text fields are cleared
         updateTextInput(session, inputId = "caseDate", value = Sys.Date())
@@ -176,6 +175,7 @@ function(input, output, session) {
         updateTextInput(session, inputId = "duplicate", value = "No")
         updateTextInput(session, inputId = "notes", value = "")
         updateTextInput(session, inputId = "url", value = "")
+        output$ID <- renderText({paste("Record Inserted:", nextID())})
     })
     
     observeEvent(input$getRecord, {
@@ -233,10 +233,10 @@ function(input, output, session) {
                         "', url = '", input$urlUpdate,
                         "' WHERE uniqueID = ", input$updateID)
         
-        #dbGetQuery(con, query) <---run this to update               
-        cat(query)
+        dbGetQuery(con, query)              
+       
         
-        #
+        
         updateTextInput(session, inputId = "caseDateUpdate", value = "")
         updateTextInput(session, inputId = "originUpdate", value = "")
         updateTextInput(session, inputId = "yearUpdate", value = "")
@@ -257,6 +257,7 @@ function(input, output, session) {
         updateTextInput(session, inputId = "duplicateUpdate", value = "")
         updateTextInput(session, inputId = "notesUpdate", value = "")
         updateTextInput(session, inputId = "urlUpdate", value = "")
+        output$IDNotFound <- renderText({isolate(paste0("Record ", input$updateID, " updated."))})
     }
     )
     
@@ -274,7 +275,7 @@ function(input, output, session) {
     
     output$plot1 <- renderPlot({
         data <- melt(table(selectedData()))
-        ggplot(data, aes(x = data[,1], y = data[,3], fill = data[,2])) + 
+        ggplot(data, aes(x = data[,1], y = data[,3], fill = factor(data[,2]))) + 
             geom_bar(stat = 'identity') + xlab(names(data)[1]) + ylab("Count") + 
             scale_fill_discrete(name = names(data)[2])
     })
