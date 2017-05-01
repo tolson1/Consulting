@@ -262,6 +262,10 @@ function(input, output, session) {
     )
     
     selectedData <- reactive({
+        validate(
+            need(input$var1Input, ''),
+            need(input$var2Input, '')
+        )
         if(input$var1Input == "" && input$var2Input == "") {
             x <- NA
             y <- NA
