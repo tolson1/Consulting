@@ -1,0 +1,213 @@
+\documentclass{article}
+	\addtolength{\oddsidemargin}{-.875in}
+	\addtolength{\evensidemargin}{-.875in}
+	\addtolength{\textwidth}{1.75in}
+	\addtolength{\topmargin}{-.875in}
+	\addtolength{\textheight}{1.75in}
+	\usepackage{graphicx}
+	\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[justification=centering]{caption}
+\usepackage{bbm}
+\usepackage{amssymb}
+\usepackage{fixmath}
+
+\begin{document}
+\title{Federal Court Appeals Web Application }
+\author{Tyler Olson \and Alex Zajichek}
+\date{\today}
+\maketitle
+
+\section{Introduction}
+
+\subsection{Files contained in {\tt appeals.zip}}
+
+
+\section{Information on backend}
+This section is to provide insight into the backend of the application for troubleshooting, or future use.
+
+\subsection{SQL, SQLite, and {\tt RSQLite}}
+There are many types of databases that are communicated with by SQL (Structured Query Language). This application uses SQLite, which is a very simple and convenient framework. Below are some preliminary steps to, if needed, create a database from scratch on the {\bf {\underline {Mac OS only}}}.\\
+
+
+\noindent *\underline{{\bf Windows users}}: You must download SQLite from {\underline {www.sqlite.org}} and use the command shell (or some other interface) to create the database. However, you do {\bf not} need to do this if you are only wanting to be a user of the {\tt shiny} application. 
+
+\subsubsection{Basic SQL commands}
+\begin{itemize}
+\item CREATE TABLE - Creates a database table for data to be stored \\
+\begin{verbatim}
+CREATE TABLE <tableName> (<column1> <dataType>, <column2> <dataType>,..)
+\end{verbatim}
+SQLite has a limited number of data types. For this application, the INTEGER and TEXT were the only data types used. If dates are desired, you can declare it as a TEXT data type, and insert your data in the form 'YYYY-MM-DD', which will allow date ranges to be maintained.
+
+\item INSERT - Insert single rows of data into the database \\
+\begin{verbatim}
+INSERT INTO <tableName> VALUES (<val1>, <val2>, ...)
+\end{verbatim}
+In this form, you must supply an input value for all columns in the database in the same order they are created in the CREATE TABLE statement. There is more specific syntax to add to the INSERT statement that will allow you to list the columns to insert values for. TEXT data types must have quotes around the string upon insert, while INTEGERS do not. 
+
+\item UPDATE - Update a set of records in a table \\
+\begin{verbatim}
+UPDATE <tableName> SET <column1> = <val1>, <column2> = <val2>,..., WHERE <condition>
+\end{verbatim}
+The desired columns to be updated are the only ones that are needed to be listed for the supplied table name. A condition can be specified to only update a set (or single) row that satisfy the criteria. The same insert value formats hold for updating.
+
+\item SELECT - Query records from the data base \\
+\begin{verbatim}
+SELECT * FROM <tableName> WHERE <condition>
+\end{verbatim}
+The asterisk is the simple way to return all columns into the result set. Specific column names can be listed with comma separation if only a subset are desired.
+\end{itemize}
+
+\subsubsection{Setting up database in terminal}
+\begin{enumerate}
+\item Open the terminal on your Mac, and initialize database.
+\begin{verbatim}
+sqlite3 <databaseName>.sqlite
+\end{verbatim}
+\begin{center}
+\includegraphics[scale=.5]{databaseInit.png}
+\end{center}
+\item Create a table to store the data. 
+\begin{verbatim}
+CREATE TABLE <tableName>(<column1> <dataType>, <column2> <dataType>,...)
+\end{verbatim}
+\begin{center}
+\includegraphics[scale=.5]{tableCreation.png}
+\end{center}
+All data types are TEXT, except the unique ID is an INTEGER PRIMARY KEY. This allows the database to enforce a constraint that every row has a {\it different} unique ID. It will not allow you to insert duplicate ones.
+\item Closing and reopening the database
+\begin{verbatim}
+.quit
+sqlite3
+.open <databaseName>.sqlite
+.schema
+\end{verbatim}
+\begin{center}
+\includegraphics[scale=.5]{closingDB.png}
+\end{center}
+After reopening the database, the {\tt .schema} command shows the tables that exist in the database.
+\end{enumerate}
+
+\subsubsection{Inserting text file into the database}
+Now that the database table has been created, it is of interest to load it with data. The data loaded here was initially downloaded as a .csv file, and written back out to {\tt appeals.txt} with {\tt `|'} as the delimiter due to many characters being present. See {\tt preliminaryTasks.R} for some minor preprocessing that was done on the original data.
+
+\begin{enumerate}
+\item Place data file ({\tt appeals.txt}) in the same directory as the database, and then open the database in terminal
+\item Change the delimiter in SQLite
+\begin{verbatim}
+.separator "<character>"
+\end{verbatim}
+\begin{center}
+\includegraphics[scale=.7]{sep.png}
+\end{center}
+
+\item Import the data file
+\begin{verbatim}
+.import <file>.txt <tableName>
+\end{verbatim}
+\begin{center}
+\includegraphics[scale=.7]{import.png}
+\end{center}
+
+\item Run some test queries
+\begin{itemize}
+\item Return the case date and ID for the row which has the maximum ID number.
+\begin{center}
+\includegraphics[scale=.7]{max.png}
+\end{center}
+\item Count the number of rows in each level of origin
+\begin{center}
+\includegraphics[scale=.7]{counts.png}
+\end{center}
+\item Get the year and case name of the first 5 records
+\begin{center}
+\includegraphics[scale=.7]{year.png}
+\end{center}
+\end{itemize}
+\end{enumerate}
+
+\subsubsection{Example using the {\tt RSQLite} package}
+The basic idea of how to use the {\tt RSQLite} package in R, is that SQL statements will be created as character strings with the same exact syntax, and will simply be sent to the database. Below is a simple example in R. 
+\begin{center}
+\includegraphics[scale=.5]{Rexample.png}
+\end{center}
+Result sets from sending a {\tt SELECT} query will be an R data frame. There is only one other function used in the application:
+
+\begin{verbatim}
+> dbListFields(conn = connection, name = "appeals")
+ [1] "uniqueID"       "caseDate"       "year"           "origin"        
+ [5] "caseName"       "type"           "duplicate"      "appealNumber"  
+ [9] "docType"        "enBanc"         "judge1"         "judge2"        
+[13] "judge3"         "opinion1"       "opinion1Author" "opinion2"      
+[17] "opinion2Author" "opinion3"       "opinion3Author" "notes"         
+[21] "url"     
+\end{verbatim}
+- Gives the column names stored in the supplied table name for a given connection.
+
+
+\section{Using the application}
+
+\subsection{Initial setup}
+\subsubsection{Installing {\tt R} and other required packages (do this one time only)}
+To install R, go to https://cran.r-project.org/. RStudio can also be downloaded at https://www.rstudio.com/products/rstudio/download2/, but is not required for use of this application. Once installed, there are a few packages in R that will need to be downloaded in order for the application to run. \\
+
+To install a package, open R and type
+\begin{verbatim}
+install.packages(<packageName>)
+\end{verbatim}
+The packages needed to run this application are {\tt shiny}, {\tt RSQLite}, {\tt shinythemes}, {\tt reshape2}, {\tt ggplot2}, and {\tt DT}. Below is a screenshot:
+\begin{center}
+\includegraphics[scale=.7]{packages.png}
+\end{center}
+Type each line into the R console, hitting enter in between. {\bf You will only need to install these packages once (unless R is updated or uninstalled), and then this step can be skipped when running the application.}
+
+\subsubsection{Gathering files}
+Keep the following files together in a {\it single} directory (other files may be present):
+\begin{enumerate}
+\item {\tt server.R} - Gives functionality to the application
+\item {\tt ui.R} - Creates the user interface 
+\item {\tt appeals.sqlite} - Database containing all of the data 
+\end{enumerate}
+*{\bf I would suggest making copies of {\tt appeals.sqlite} for backup, and storing most recent copies on Github, Dropbox, etc.}
+
+\subsubsection{Running the app}
+Once the {\tt server.R} and {\tt ui.R} files have been stored together within a single directory, the application can be launched a few different ways. If you are using the standard {\tt R} interface, {\tt RGui}, the working directory must be changed to the location where the {\tt server.R} and {\tt ui.R} files are stored. This can be done by selecting {\bf File $\rightarrow$ Change dir...}, and choosing the appropriate folder. Typing {\tt runApp()} within the R console and hitting enter will now launch the application. 
+
+If you are using {\tt RStudio} rather than {\tt RGui}, which is recommended, a similar series of steps is required. To specify the appropriate working directory, select {\bf Session $\rightarrow$ Set Working Directory $\rightarrow$ Choose Directory}. Running the {\tt runApp()} command in the console with launch the application. Alternatively, if the {\tt server.R} or {\tt ui.R} files are open in the {\tt R} script window, {\tt RStudio} automatically recognizes that the file corresponds to a {\tt Shiny} application and provides a {\bf Run App} button in the right-hand corner of the window.
+
+\subsection{Interface}
+
+
+\subsubsection{Query tab}
+When the application is initially launched, the {\bf Query Data} tab is the default landing page. No data will appear until the {\bf Display} tab is selected. The {\bf Filter} tab allows users to subset the data according to different variable levels. Multiple levels can be specified by simply selecting the desired levels one at a time. The default date range is from the earliest date in the database to today's date. If data is inserted into the database and contains a new variable level, this level will automatically be added to the drop-down list. 
+
+The {\bf Display} tab identifies which columns are shown in the table within the main panel of the page. The {\it ID, Case Date, Origin, and Case Name} variables are selected and displayed by default. Checking the box corresponding to a particular variable adds the variable column to the table, and unchecking the box removes the column from the table. Once the data has been subset according to specific variables and levels, the subset being displayed in the table can be downloaded as a {\tt .csv} file by clicking the {\bf Download} button located at the bottom of the page.
+
+\subsubsection{Insert tab}
+The {\bf Insert Data} functionality allows users to manually enter information regarding new cases and add this information to the database.
+
+\subsubsection{Update tab}
+
+
+\subsubsection{Visualize tab}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
